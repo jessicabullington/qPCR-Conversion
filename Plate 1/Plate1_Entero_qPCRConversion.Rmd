@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Import and format the data
 ```{r comment=NA, message=F, warning=F}
 # load the data (note data file must be in this repository)
-data <- read.csv("Plate1_GenBac_qPCRConversion.csv")
+data <- read.csv("Plate1_Entero_qPCRConversion.csv")
 View(data)
 
 # clean up the data file (there is some stuff at the bottom and extra blank rows)
@@ -33,7 +33,7 @@ data$Amount..Copies. <- as.numeric(as.character(data$Amount..Copies.)) # change 
 standards = data[1:16,]
 standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
   
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19) 
+standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
 abline(coef(standardCurve)) 
 legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2), 
                             paste= "intercept", round(standardCurve$coefficients[1], 2), 
@@ -120,19 +120,23 @@ unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
 ```{r}
 # make a plot that compares the diluted to undiluted replicates for each sample including dilution factor
 library("ggplot2")
-library("scales")
 unknowns$SampleIDNum <- as.numeric(as.character(unknowns$SampleIDNum)) # change to numeric
-unknowns = unknowns[1:72,]
-qplot(SampleIDNum,copies.ml, data=unknowns)
+replicates = unknowns[1:71,]
+replicates <- replicates[-7,] # This removes rows (A9)
+replicates <- replicates[-17,] # This removes rows (B11)
+replicates <- replicates[-32,] # This removes rows (D9)
+qplot(SampleIDNum,copies.ml, data=replicates)
 ```
 
 
 ### Export the data to a csv file
 ```{r}
 # write csv file
-write.csv(unknowns, file = "Plate1_GenBac_ConvertedData.csv", row.names=FALSE, na="")
+write.csv(unknowns, file = "Plate1_Entero_ConvertedData.csv", row.names=FALSE, na="")
 
 # average the replicates (if not strongly inhibited) and make a new file
 averaged = unknowns[1:72,]
 averaged$averaged <- tapply(unknowns$copies.ml, unknowns$SampleIDNum, mean)
-write.csv(averaged, file = "Plate1_GenBac_Averaged.csv", row.names=FALSE, na="")
+write.csv(averaged, file = "Plate1_Entero_Averaged.csv", row.names=FALSE, na="")
+```
+
