@@ -1,7 +1,7 @@
 ---
-title: "Plate1_GenBac_qPCRConversion"
+title: "Plate1_E.coli_qPCRConversion"
 author: "Rayna McClintock"
-date: "5/18/2020"
+date: "6/1/2020"
 output: html_document
 ---
 
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Import and format the data
 ```{r comment=NA, message=F, warning=F}
 # load the data (note data file must be in this repository)
-data <- read.csv("Plate1_GenBac_qPCRConversion.csv")
+data <- read.csv("Plate1_E.coli_qPCRConversion.csv")
 View(data)
 
 # clean up the data file (there is some stuff at the bottom and extra blank rows)
@@ -44,7 +44,8 @@ legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2],
 #### Replot the standard curve after removing certain standards
 ```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
 # remove standards that sucked and redo analysis NOT NEEDED 21 Jan 2020
-standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
+standards <- standards[-15,-16,] # uncomment this line and change which rows to remove
+
 standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
 
 standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
@@ -121,22 +122,23 @@ unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
 # make a plot that compares the diluted to undiluted replicates for each sample including dilution factor
 library("ggplot2")
 unknowns$SampleIDNum <- as.numeric(as.character(unknowns$SampleIDNum)) # change to numeric
-unknowns = unknowns[1:72,]
-qplot(SampleIDNum,copies.ml, data=unknowns)
+replicates = unknowns[1:71,]
+replicates <- replicates[-18,] # This removes rows (B11)
+replicates <- replicates[-32,] # This removes rows (D8)
+replicates <- replicates[-55,] # This removes rows (G5)
+qplot(SampleIDNum,copies.ml, data=replicates)
 ```
 
 
 ### Export the data to a csv file
 ```{r}
 # write csv file
-write.csv(unknowns, file = "Plate1_GenBac_ConvertedData.csv", row.names=FALSE, na="")
+write.csv(unknowns, file = "Plate1_E.coli_ConvertedData.csv", row.names=FALSE, na="")
 
 # average the replicates (if not strongly inhibited) and make a new file
 averaged = unknowns[1:72,]
 averaged$averaged <- tapply(unknowns$copies.ml, unknowns$SampleIDNum, mean)
-write.csv(averaged, file = "Plate1_GenBac_Averaged.csv", row.names=FALSE, na="")
+write.csv(averaged, file = "Plate1_E.coli_Averaged.csv", row.names=FALSE, na="")
 ```
-
-
 
 
