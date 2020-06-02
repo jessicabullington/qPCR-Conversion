@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Import and format the data
 ```{r comment=NA, message=F, warning=F}
 # load the data (note data file must be in this repository)
-data <- read.csv("Plate2_Entero_qPCRConversion.csv")
+data <- read.csv("Plate2_E.coli_qPCRConversion.csv")
 View(data)
 
 # clean up the data file (there is some stuff at the bottom and extra blank rows)
@@ -56,32 +56,6 @@ legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2],
                             paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
 ```
 
-### Plot the unknowns on top of the standard curve to ensure interpolating rather than extrapolating
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
-standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
-standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
-
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
-abline(coef(standardCurve))
-col = "blue"
-legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
-
-unknowns = unknowns[1:72,]
-standardCurve <- lm(CT ~ log10(copies.well), data = unknowns)
-
-standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, col = "blue")
-
-
-#abline(coef(standardCurve))
-#legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            #paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            #paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            #paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
-```
-
 ### Convert cycle threshold to gene copies per mL
 ```{r comment=NA, message=F, warning=F}
 # data set of unknowns including info on standard curve
@@ -116,6 +90,33 @@ unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
 
 ```
 
+### Plot the unknowns on top of the standard curve to ensure interpolating rather than extrapolating
+```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
+standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
+standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
+
+standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
+abline(coef(standardCurve))
+col = "blue"
+legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
+                            paste= "intercept", round(standardCurve$coefficients[1], 2),
+                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
+                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+
+unknowns = unknowns[1:72,]
+standardCurve <- lm(CT ~ log10(copies.well), data = unknowns)
+
+standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, col = "blue")
+
+
+#abline(coef(standardCurve))
+#legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
+                            #paste= "intercept", round(standardCurve$coefficients[1], 2),
+                            #paste= "R^2", round(summary(standardCurve)$r.squared, 2),
+                            #paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+```
+
+
 ### Plot the replicates to check inhibition
 ```{r}
 # make a plot that compares the diluted to undiluted replicates for each sample including dilution factor
@@ -125,17 +126,17 @@ replicates = unknowns[1:71,]
 #replicates <- replicates[-18,] # This removes rows (B11)
 #replicates <- replicates[-32,] # This removes rows (D8)
 #replicates <- replicates[-55,] # This removes rows (G5)
-qplot(SampleIDNum,copies.ml, data=replicates)
+qplot(SampleIDNum,copies.ml, data=replicates, col=DilutionFactor)
 ```
 
 
 ### Export the data to a csv file
 ```{r}
 # write csv file
-write.csv(unknowns, file = "Plate2_Entero_ConvertedData.csv", row.names=FALSE, na="")
+write.csv(unknowns, file = "Plate2_E.coli_ConvertedData.csv", row.names=FALSE, na="")
 
 # average the replicates (if not strongly inhibited) and make a new file
 averaged = unknowns[1:72,]
 averaged$averaged <- tapply(unknowns$copies.ml, unknowns$SampleIDNum, mean)
-write.csv(averaged, file = "Plate2_Entero_Averaged.csv", row.names=FALSE, na="")
+write.csv(averaged, file = "Plate2_E.coli_Averaged.csv", row.names=FALSE, na="")
 ```

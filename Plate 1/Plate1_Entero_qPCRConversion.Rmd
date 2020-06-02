@@ -55,33 +55,6 @@ legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2],
                             paste= "R^2", round(summary(standardCurve)$r.squared, 2),
                             paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
 ```
-
-### Plot the unknowns on top of the standard curve to ensure interpolating rather than extrapolating
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
-standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
-standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
-
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
-abline(coef(standardCurve))
-col = "blue"
-legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
-
-unknowns = unknowns[1:72,]
-standardCurve <- lm(CT ~ log10(copies.well), data = unknowns)
-
-standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, col = "blue")
-
-
-#abline(coef(standardCurve))
-#legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            #paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            #paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            #paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
-```
-
 ### Convert cycle threshold to gene copies per mL
 ```{r comment=NA, message=F, warning=F}
 # data set of unknowns including info on standard curve
@@ -116,6 +89,34 @@ unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
 
 ```
 
+### Plot the unknowns on top of the standard curve to ensure interpolating rather than extrapolating
+```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
+standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
+standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
+
+standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
+abline(coef(standardCurve))
+col = "blue"
+legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
+                            paste= "intercept", round(standardCurve$coefficients[1], 2),
+                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
+                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+
+unknowns = unknowns[1:72,]
+standardCurve <- lm(CT ~ log10(copies.well), data = unknowns)
+
+standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, col = "blue")
+
+
+#abline(coef(standardCurve))
+#legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
+                            #paste= "intercept", round(standardCurve$coefficients[1], 2),
+                            #paste= "R^2", round(summary(standardCurve)$r.squared, 2),
+                            #paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+```
+
+
+
 ### Plot the replicates to check inhibition
 ```{r}
 # make a plot that compares the diluted to undiluted replicates for each sample including dilution factor
@@ -125,7 +126,7 @@ replicates = unknowns[1:71,]
 replicates <- replicates[-7,] # This removes rows (A9)
 replicates <- replicates[-17,] # This removes rows (B11)
 replicates <- replicates[-32,] # This removes rows (D9)
-qplot(SampleIDNum,copies.ml, data=replicates)
+qplot(SampleIDNum,copies.ml, data=replicates, col=DilutionFactor)
 ```
 
 
