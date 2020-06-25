@@ -136,7 +136,7 @@ qplot(SampleIDNum,copies.ml, data=replicates, col=DilutionFactor)
 write.csv(unknowns, file = "Plate6_GenBac_ConvertedData.csv", row.names=FALSE, na="")
 
 # average the replicates (if not strongly inhibited) and make a new file
-averaged = unknowns[1:72,]
-averaged$averaged <- tapply(unknowns$copies.ml, unknowns$SampleIDNum, mean)
-write.csv(averaged, file = "Plate6_GenBac_Averaged.csv", row.names=FALSE, na="")
+library(dplyr)
+data.average = unknowns %>% group_by(SampleIDNum) %>% summarise(copies.ml = mean(copies.ml, na.rm = T))
+write.csv(data.average, file = "Plate6_GenBac_Averaged.csv", row.names=FALSE, na="")
 ```

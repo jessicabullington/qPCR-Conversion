@@ -95,7 +95,7 @@ unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
 standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
 standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
 
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
+standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19, ylim=c(20,37), xlim=c(0,5))
 abline(coef(standardCurve))
 col = "blue"
 legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
@@ -136,7 +136,7 @@ qplot(SampleIDNum,copies.ml, data=replicates, col=DilutionFactor)
 write.csv(unknowns, file = "Plate2_E.coli_ConvertedData.csv", row.names=FALSE, na="")
 
 # average the replicates (if not strongly inhibited) and make a new file
-averaged = unknowns[1:72,]
-averaged$averaged <- tapply(unknowns$copies.ml, unknowns$SampleIDNum, mean)
-write.csv(averaged, file = "Plate2_E.coli_Averaged.csv", row.names=FALSE, na="")
+library(dplyr)
+data.average = unknowns %>% group_by(SampleIDNum) %>% summarise(copies.ml = mean(copies.ml, na.rm = T))
+write.csv(data.average, file = "Plate2_E.coli_Averaged.csv", row.names=FALSE, na="")
 ```
