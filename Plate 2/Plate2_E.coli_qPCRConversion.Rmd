@@ -13,22 +13,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Import and format the data
 ```{r comment=NA, message=F, warning=F}
+# clear the workspace
+rm(list=ls())
+
 # load the data (note data file must be in this repository)
 data <- read.csv("Plate2_E.coli_qPCRConversion.csv")
-View(data)
-
-# clean up the data file (there is some stuff at the bottom and extra blank rows)
-#data <- data[-92:-93,] # This removes rows 92-95
-View(data)
-
-# assign to the correct data class #warning message about NAs is OK
-class(data$CT) # check the data class type
-data$CT <- as.numeric(as.character(data$CT)) # change to numeric
-data$Amount..Copies. <- as.numeric(as.character(data$Amount..Copies.)) # change to numeric
+#View(data)
 ```
 
 ### Plot the standard curve
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
+```{r comment=NA, message=F, warning=F, fig.width = 5, fig.height = 5}
 # linear regression of standard curve
 standards = data[1:16,]
 standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
