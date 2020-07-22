@@ -13,106 +13,93 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Import and format the data
 ```{r comment=NA, message=F, warning=F}
+# clear workspace
+rm(list=ls())
+
 # load the data (note data file must be in this repository)
 data <- read.csv("Plate8_Entero_qPCRConversion.csv")
-View(data)
-
-# clean up the data file (there is some stuff at the bottom and extra blank rows)
-#data <- data[-68:-70,] # This removes rows 92-95
-View(data)
-
-# assign to the correct data class #warning message about NAs is OK
-class(data$CT) # check the data class type
-data$CT <- as.numeric(as.character(data$CT)) # change to numeric
-data$Amount..Copies. <- as.numeric(as.character(data$Amount..Copies.)) # change to numeric
 ```
 
 ### Plot the standard curve
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
+```{r comment=NA, message=F, warning=F, fig.width = 5, fig.height = 5}
 # linear regression of standard curve
-standards = data[1:16,]
+standards = subset(data, Name == "STANDARD")
 standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
-  
+
+# save the line info
+standard_slope = standardCurve$coefficients[2]
+standard_intercept = standardCurve$coefficients[1]
+R2 = summary(standardCurve)$r.squared
+efficiency =  (10^(-1/standardCurve$coefficients[2])-1)*100
+
+# plot standards and best fit line
 standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19) 
 abline(coef(standardCurve)) 
-legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2), 
-                            paste= "intercept", round(standardCurve$coefficients[1], 2), 
-                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+legend("topright", legend = c(paste= "slope", round(standard_slope, 2), paste= "intercept", round(standard_intercept, 2), paste= "R^2", round(R2, 2), paste = "efficiency", round(efficiency, 1)))
 ```
 
-#### Replot the standard curve after removing certain standards
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
-# remove standards that sucked and redo analysis NOT NEEDED 21 Jan 2020
-#standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
-standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
 
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19)
-abline(coef(standardCurve))
-col = "blue"
-legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
-```
-### Convert cycle threshold to gene copies per mL
+### Convert cycle threshold to gene copies per mL using standard curve
 ```{r comment=NA, message=F, warning=F}
 # data set of unknowns including info on standard curve
-#unknowns = subset(data, Name == "UNKNOWN")
-unknowns = data[17:88,]
-#unknowns <- unknowns[-1:-3,] # uncomment this line and change which rows to remove if these samples were outside of the standard curve
+unknowns = subset(data, Name == "UNKNOWN")
 
 # add new columns to the data table
-unknowns$plate_num = 1 #change to the actual plate number
-unknowns$standard_slope = standardCurve$coefficients[2]
-unknowns$standard_intercept = standardCurve$coefficients[1]
-unknowns$R2 = summary(standardCurve)$r.squared
-unknowns$efficiency =  (10^(-1/standardCurve$coefficients[2])-1)*100
+unknowns$plate_num = 8 # note:change to the actual plate number
+unknowns$standard_slope = standard_slope
+unknowns$standard_intercept = standard_intercept
+unknowns$R2 = R2
+unknowns$efficiency = efficiency
   
 # add a new column that interpolates copies/well from Ct for the unknowns
-unknowns$log.copies.well = ((unknowns$CT - standardCurve$coefficients[1])/standardCurve$coefficients[2])
+unknowns$log.copies.well = (unknowns$CT - standard_intercept)/standard_slope
 unknowns$copies.well = 10^unknowns$log.copies.well
 
 # copies/ul extract accounting for dilution factor
-vol.well = 3 #qPCR template volume in ul
+vol.well = 3 # note:change to qPCR template volume in ul
 unknowns$vol.well = vol.well
 unknowns$copies.ul = ((unknowns$copies.well/vol.well)*unknowns$DilutionFactor)
 
 # copies/extraction
-vol.elution = 110 #DNA extraction elution volume in ul
+vol.elution = 110 #note:change to DNA extraction elution volume in ul
 unknowns$vol.elution = vol.elution
 unknowns$copies.extraction = (unknowns$copies.ul*vol.elution)
 
 # copies/ml #Volume is volume of sample filtered in mL
 unknowns$copies.ml = (unknowns$copies.extraction/unknowns$Volume)
-
-
 ```
 
+
 ### Plot the unknowns on top of the standard curve to ensure interpolating rather than extrapolating
-```{r comment=NA, message=F, warning=F, fig.width = 10, fig.height = 10}
-standards <- standards[-15:-16,] # uncomment this line and change which rows to remove
-standardCurve <- lm(CT ~ log10(Amount..Copies.), data = standards)
+```{r comment=NA, message=F, warning=F, fig.width = 5, fig.height = 5}
+# set up the color palette
+library(viridis)
+unknowns$SampleIDNum = as.factor(as.character(unknowns$SampleIDNum)) # change to factor for colors
+Colors = viridis(n=nlevels(unknowns$SampleIDNum)) # set the color levels to call on later
 
-standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards, pch=19,ylim=c(20,39), xlim=c(-1,5))
-abline(coef(standardCurve))
-col = "blue"
-legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
+# check the range and adjust the limits in plot
+range(unknowns$CT, na.rm=T) # y limits
+range(unknowns$log.copies.well, na.rm =T) # x limits
 
-unknowns = unknowns[1:72,]
-standardCurve <- lm(CT ~ log10(copies.well), data = unknowns)
+# plot the standard curve again
+standardCurvePlot <- plot(CT ~ log10(Amount..Copies.), data = standards,
+                          xlim = c(-1,6), ylim = c(22,41),
+                          xlab = "Log10(copies/well)",
+                          ylab = "CT") 
 
-standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, col = "blue")
+# add boundaries and standard line
+abline(v=log10(10), lty=2)
+abline(v=log10(50000), lty=2)
+abline(coef(standardCurve)) 
 
+# add the sample data
+standardCurvePlot <- points(CT ~ log.copies.well, data = unknowns, pch=19, 
+                            col = Colors[unknowns$SampleIDNum])
+legend("topright", inset = 0.002, box.lty=0, legend=c(paste= "Slope", round(standardCurve$coefficients[2], 2), 
+                                                      paste= "Intercept", round(standardCurve$coefficients[1], 2), 
+                                                      paste= "R^2", round(summary(standardCurve)$r.squared, 2),
+                                                      paste = "Efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
 
-#abline(coef(standardCurve))
-#legend("topright", legend=c(paste= "slope", round(standardCurve$coefficients[2], 2),
-                            #paste= "intercept", round(standardCurve$coefficients[1], 2),
-                            #paste= "R^2", round(summary(standardCurve)$r.squared, 2),
-                            #paste = "efficiency", round((10^(-1/standardCurve$coefficients[2])-1)*100, 1)))
 ```
 
 
@@ -122,11 +109,8 @@ standardCurvePlot <- points(CT ~ log10(copies.well), data = unknowns, pch=19, co
 # make a plot that compares the diluted to undiluted replicates for each sample including dilution factor
 library("ggplot2")
 unknowns$SampleIDNum <- as.numeric(as.character(unknowns$SampleIDNum)) # change to numeric
-replicates = unknowns[1:72,]
-#replicates <- replicates[-18,] # This removes rows (B11)
-#replicates <- replicates[-32,] # This removes rows (D8)
-#replicates <- replicates[-55,] # This removes rows (G5)
-qplot(SampleIDNum,copies.ml, data=replicates, col=DilutionFactor)
+unknowns$DilutionFactor <- as.factor(as.character(unknowns$DilutionFactor)) # change to factor
+qplot(SampleIDNum,log10(copies.ml+1), data=unknowns, col=DilutionFactor)
 ```
 
 

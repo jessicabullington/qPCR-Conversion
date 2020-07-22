@@ -1,4 +1,4 @@
-Pos,Name,CT,Amount [Copies],Target,SampleINum,Date,Location,Volume,DilutionFactor
+Pos,Name,CT,Amount [Copies],Target,SampleIDNum,Date,Location,Volume,DilutionFactor
 A1,STANDARD,23.658,50000,genbac,St1,,,,1
 A2,STANDARD,23.181,50000,genbac,St1,,,,1
 B1,STANDARD,25.97,10000,genbac,St2,,,,1
