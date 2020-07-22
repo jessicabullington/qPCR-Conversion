@@ -117,7 +117,7 @@ legend("topright", inset = 0.002, box.lty=0, legend=c(paste= "Slope", round(stan
 library("ggplot2")
 unknowns$SampleIDNum <- as.numeric(as.character(unknowns$SampleIDNum)) # change to numeric
 unknowns$DilutionFactor <- as.factor(as.character(unknowns$DilutionFactor)) # change to factor
-qplot(SampleIDNum,log(copies.ml+1), data=unknowns, col=DilutionFactor)
+qplot(SampleIDNum,log10(copies.ml+1), data=unknowns, col=DilutionFactor)
 ```
 
 
