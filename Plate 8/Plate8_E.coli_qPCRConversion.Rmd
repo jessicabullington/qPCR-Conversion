@@ -39,6 +39,13 @@ legend("topright", legend = c(paste= "slope", round(standard_slope, 2), paste= "
 ```
 
 
+### Remove standards that sucked (in this case, just use a global std curve since curve is offset)
+```{r}
+standard_slope = -3.39646
+standard_intercept = 37.09888
+```
+
+
 ### Convert cycle threshold to gene copies per mL using standard curve
 ```{r comment=NA, message=F, warning=F}
 # data set of unknowns including info on standard curve
@@ -48,8 +55,8 @@ unknowns = subset(data, Name == "UNKNOWN")
 unknowns$plate_num = 8 # note:change to the actual plate number
 unknowns$standard_slope = standard_slope
 unknowns$standard_intercept = standard_intercept
-unknowns$R2 = R2
-unknowns$efficiency = efficiency
+unknowns$R2 = NA
+unknowns$efficiency = NA
   
 # add a new column that interpolates copies/well from Ct for the unknowns
 unknowns$log.copies.well = (unknowns$CT - standard_intercept)/standard_slope

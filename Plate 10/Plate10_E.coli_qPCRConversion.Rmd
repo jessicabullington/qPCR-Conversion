@@ -18,6 +18,8 @@ rm(list=ls())
 
 # load the data (note data file must be in this repository)
 data <- read.csv("Plate10_E.coli_qPCRConversion.csv")
+data$CT = as.numeric(as.character(data$CT))
+data$Amount..Copies. = as.numeric(as.character(data$Amount..Copies.))
 ```
 
 ### Plot the standard curve

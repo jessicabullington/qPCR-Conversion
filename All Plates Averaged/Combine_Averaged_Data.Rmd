@@ -1,0 +1,83 @@
+---
+title: "Combine Averaged Data"
+author: "Jessica Bullington"
+date: "8/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# clear workspace
+rm(list=ls())
+
+# load the data (note data file must be in this repository)
+p1EC <- read.csv("Plate1_E.coli_Averaged.csv")
+p2EC <- read.csv("Plate2_E.coli_Averaged.csv")
+p3EC <- read.csv("Plate3_E.coli_Averaged.csv")
+p4EC <- read.csv("Plate4_E.coli_Averaged.csv") # need global std
+p5EC <- read.csv("Plate5_E.coli_Averaged.csv")
+p6EC <- read.csv("Plate6_E.coli_Averaged.csv")
+p7EC <- read.csv("Plate7_E.coli_Averaged.csv")
+p8EC <- read.csv("Plate8_E.coli_Averaged.csv") # need global std
+p9EC <- read.csv("Plate9_E.coli_Averaged.csv")
+p10EC <- read.csv("Plate10_E.coli_Averaged.csv")
+
+p1NT <- read.csv("Plate1_Entero_Averaged.csv")
+p2NT <- read.csv("Plate2_Entero_Averaged.csv")
+p3NT <- read.csv("Plate3_Entero_Averaged.csv")
+p4NT <- read.csv("Plate4_Entero_Averaged.csv")
+p5NT <- read.csv("Plate5_Entero_Averaged.csv")
+p6NT <- read.csv("Plate6_Entero_Averaged.csv")
+p7NT <- read.csv("Plate7_Entero_Averaged.csv")
+p8NT <- read.csv("Plate8_Entero_Averaged.csv")
+p9NT <- read.csv("Plate9_Entero_Averaged.csv")
+p10NT <- read.csv("Plate10_Entero_Averaged.csv")
+
+p1GB <- read.csv("Plate1_GenBac_Averaged.csv")
+p2GB <- read.csv("Plate2_GenBac_Averaged.csv")
+p3GB <- read.csv("Plate3_GenBac_Averaged.csv")
+p4GB <- read.csv("Plate4_GenBac_Averaged.csv")
+p5GB <- read.csv("Plate5_GenBac_Averaged.csv")
+p6GB <- read.csv("Plate6_GenBac_Averaged.csv")
+p7GB <- read.csv("Plate7_GenBac_Averaged.csv")
+p8GB <- read.csv("Plate8_GenBac_Averaged.csv")
+p9GB <- read.csv("Plate9_GenBac_Averaged.csv")
+p10GB <- read.csv("Plate10_GenBac_Averaged.csv")
+```
+
+
+```{r}
+# combine the files
+Ecoli = rbind(p1EC, p2EC, p3EC, p4EC, p5EC, p6EC, p7EC, p8EC, p9EC, p10EC) 
+Entero = rbind(p1NT, p2NT, p3NT, p4NT, p5NT, p6NT, p7NT, p8NT, p9NT, p10NT)
+GenBac = rbind(p1GB, p2GB, p3GB, p4GB, p5GB, p6GB, p7GB, p8GB, p9GB, p10GB)
+
+Ecoli = na.omit(Ecoli)
+Entero = na.omit(Entero)
+GenBac = na.omit(GenBac)
+
+Ecoli$SampleIDNum = as.numeric(Ecoli$SampleIDNum)
+
+library(dplyr)
+J1 = full_join(Ecoli, Entero, by="SampleIDNum")
+All = full_join(J1, GenBac, by="SampleIDNum")
+colnames(All) = c("SampleIDNum", "Ecoli", "Entero", "GenBac")
+```
+
+
+```{r}
+# Keep only canal samples
+canalID = read.csv("Canal_SampleIDNum.csv")
+canal = subset(All, SampleIDNum %in% canalID$SampleIDNum)
+canal2 = canal[order(canal$SampleIDNum),]
+write.csv(canal2, "Canal_Data.csv", row.names = F, na ="")
+
+# Remaining samples are stream
+stream = subset(All, !(SampleIDNum %in% canalID$SampleIDNum))
+stream2 = stream[order(stream$SampleIDNum),]
+write.csv(stream2, "Stream_Data.csv", row.names = F, na ="")
+```
+
